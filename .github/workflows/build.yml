@@ -3,7 +3,7 @@ name: Build APK with Buildozer
 on:
   push:
     branches:
-      - main  # если у тебя другая ветка — замени на неё
+      - main  # замените на вашу ветку, если нужно
 
 jobs:
   build:
@@ -11,12 +11,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Python 3.9
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: '3.9'
 
       - name: Install dependencies
         run: |
@@ -29,7 +29,7 @@ jobs:
         run: buildozer android debug
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Shifra-APK
           path: bin/*.apk

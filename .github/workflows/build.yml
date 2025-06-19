@@ -3,11 +3,16 @@ name: Build APK with Buildozer
 on:
   push:
     branches:
-      - main  # или твоя ветка
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    env:
+      ANDROID_HOME: ${{ github.workspace }}/android-sdk
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+      PATH: ${{ github.workspace }}/android-sdk/platform-tools:${{ github.workspace }}/android-sdk/cmdline-tools/latest/bin:${{ github.workspace }}/android-sdk/build-tools/33.0.2:$PATH
 
     steps:
       - name: Checkout code
@@ -18,28 +23,22 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install dependencies and Android SDK build tools
+      - name: Install Build Dependencies
         run: |
           sudo apt update
           sudo apt install -y zip unzip openjdk-8-jdk python3-pip libffi-dev libssl-dev libsqlite3-dev
           pip install --upgrade pip
-          pip install buildozer cython
+          pip install cython buildozer
 
-          # Установка sdkmanager
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip cmdline-tools.zip -d $HOME/cmdline-tools
-          mkdir -p $HOME/Android/Sdk/cmdline-tools
-          mv $HOME/cmdline-tools/cmdline-tools $HOME/Android/Sdk/cmdline-tools/latest
+      - name: Install Android SDK manually
+        run: |
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk.zip
+          unzip sdk.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
 
-          export ANDROID_SDK_ROOT=$HOME/Android/Sdk
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
-
-          # Принимаем лицензии и устанавливаем build-tools и platform-tools
-          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
-          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2"
-
-          # Проверка aidl
-          ls $ANDROID_SDK_ROOT/build-tools/33.0.2/aidl
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
       - name: Build APK
         run: buildozer android debug

@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y zip unzip tar wget openjdk-8-jdk python3-pip libffi-dev libssl-dev libsqlite3-dev
+          sudo apt install -y git zip unzip tar wget openjdk-8-jdk python3-pip libffi-dev libssl-dev libsqlite3-dev
           pip install --upgrade pip
           pip install cython buildozer
 

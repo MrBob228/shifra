@@ -1,0 +1,35 @@
+name: Build APK with Buildozer
+
+on:
+  push:
+    branches:
+      - main  # если у тебя другая ветка — замени на неё
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y zip unzip openjdk-8-jdk python3-pip libffi-dev libssl-dev libsqlite3-dev
+          pip install --upgrade pip
+          pip install buildozer cython
+
+      - name: Build APK
+        run: buildozer android debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Shifra-APK
+          path: bin/*.apk

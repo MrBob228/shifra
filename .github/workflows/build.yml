@@ -9,15 +9,34 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    container: kivy/buildozer  # ✅ Готовый Docker-образ со всем нужным
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Build APK
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install build dependencies and Android SDK
         run: |
-          pip install --upgrade buildozer cython
+          sudo apt update
+          sudo apt install -y zip unzip tar wget openjdk-8-jdk python3-pip libffi-dev libssl-dev libsqlite3-dev
+          pip install --upgrade pip
+          pip install cython buildozer
+
+          # Установка Android SDK вручную
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk.zip
+          unzip sdk.zip -d $HOME/android-sdk/cmdline-tools
+          mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/33.0.2:$PATH
+
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
           buildozer android debug
 
       - name: Upload APK artifact

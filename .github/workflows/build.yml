@@ -3,7 +3,7 @@ name: Build APK with Buildozer
 on:
   push:
     branches:
-      - main  # замените на вашу ветку, если нужно
+      - main  # или твоя ветка
 
 jobs:
   build:
@@ -29,7 +29,8 @@ jobs:
         run: buildozer android debug
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Shifra-APK
           path: bin/*.apk
+

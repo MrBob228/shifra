@@ -1,4 +1,4 @@
-name: Build APK with Buildozer
+name: Build APK with Docker
 
 on:
   push:
@@ -9,54 +9,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      ANDROID_HOME: ${{ github.workspace }}/android-sdk
-      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
-      PATH: /usr/local/bin:${{ github.workspace }}/android-sdk/build-tools/33.0.2:${{ github.workspace }}/android-sdk/cmdline-tools/latest/bin:${{ github.workspace }}/android-sdk/platform-tools:$PATH
+    container:
+      image: kivy/buildozer:latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Install system dependencies
+      - name: Install Python dependencies
         run: |
-          sudo apt update
-          sudo apt install -y git zip unzip tar wget openjdk-8-jdk python3-pip libffi-dev libssl-dev libsqlite3-dev
-          pip install --upgrade pip
-          pip install cython buildozer
-
-      - name: Install Android SDK and Build Tools
-        run: |
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk.zip
-          unzip sdk.zip -d $ANDROID_HOME/cmdline-tools
-          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
-
-          yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses
-          sdkmanager --sdk_root=$ANDROID_HOME \
-            "platform-tools" \
-            "platforms;android-33" \
-            "build-tools;33.0.2"
-
-          if [ -f "$ANDROID_HOME/build-tools/33.0.2/aidl" ]; then
-            echo "✅ AIDL найден"
-            sudo ln -sf $ANDROID_HOME/build-tools/33.0.2/aidl /usr/local/bin/aidl
-          else
-            echo "❌ AIDL НЕ найден"
-            exit 1
-          fi
+          pip install --upgrade cython
 
       - name: Build APK
         run: |
-          echo "Проверка git:"
-          git --version || (echo "❌ Git не найден" && exit 1)
-          echo "Проверка aidl:"
-          which aidl || (echo "❌ aidl не найден" && exit 1)
           buildozer android debug
 
       - name: Upload APK

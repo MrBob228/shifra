@@ -13,33 +13,44 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Python 3.9
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: Install build dependencies and Android SDK
+      - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y zip unzip tar wget openjdk-8-jdk python3-pip libffi-dev libssl-dev libsqlite3-dev
           pip install --upgrade pip
           pip install cython buildozer
 
-          # Установка Android SDK вручную
+      - name: Install Android SDK + Build Tools
+        run: |
+          # Установка Android SDK
           mkdir -p $HOME/android-sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk.zip
-          unzip sdk.zip -d $HOME/android-sdk/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk-tools.zip
+          unzip sdk-tools.zip -d $HOME/android-sdk/cmdline-tools
           mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
 
+          # Установка Android компонентов
           export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/33.0.2:$PATH
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/33.0.2:$PATH
 
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses
+          sdkmanager --sdk_root=$ANDROID_HOME \
+            "platform-tools" \
+            "platforms;android-33" \
+            "build-tools;33.0.2"
 
+      - name: Build APK with Buildozer
+        env:
+          ANDROID_HOME: $HOME/android-sdk
+          PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/33.0.2:$PATH
+        run: |
           buildozer android debug
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Shifra-APK

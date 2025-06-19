@@ -12,7 +12,7 @@ jobs:
     env:
       ANDROID_HOME: ${{ github.workspace }}/android-sdk
       ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
-      PATH: ${{ github.workspace }}/android-sdk/cmdline-tools/latest/bin:${{ github.workspace }}/android-sdk/platform-tools:${{ github.workspace }}/android-sdk/build-tools/33.0.2:/usr/bin:/bin:/usr/local/bin
+      PATH: /usr/local/bin:${{ github.workspace }}/android-sdk/build-tools/33.0.2:${{ github.workspace }}/android-sdk/cmdline-tools/latest/bin:${{ github.workspace }}/android-sdk/platform-tools:$PATH
 
     steps:
       - name: Checkout code
@@ -43,16 +43,18 @@ jobs:
             "platforms;android-33" \
             "build-tools;33.0.2"
 
-          # Проверим наличие aidl
-          echo "AIDL path check:"
-          ls $ANDROID_HOME/build-tools/33.0.2/aidl || echo "aidl НЕ найден"
+          # Проверка aidl
+          if [ -f "$ANDROID_HOME/build-tools/33.0.2/aidl" ]; then
+            echo "✅ AIDL найден"
+            sudo ln -s $ANDROID_HOME/build-tools/33.0.2/aidl /usr/local/bin/aidl
+          else
+            echo "❌ AIDL НЕ найден"
+            exit 1
+          fi
 
       - name: Build APK
         run: |
-          echo "Git version:"
-          git --version
-          echo "AIDL location:"
-          which aidl || echo "aidl не найден в PATH"
+          which aidl || echo "⚠️ AIDL не найден в PATH"
           buildozer android debug
 
       - name: Upload APK
@@ -60,4 +62,3 @@ jobs:
         with:
           name: Shifra-APK
           path: bin/*.apk
-

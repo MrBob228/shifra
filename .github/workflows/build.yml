@@ -23,14 +23,14 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt update
           sudo apt install -y git zip unzip tar wget openjdk-8-jdk python3-pip libffi-dev libssl-dev libsqlite3-dev
           pip install --upgrade pip
           pip install cython buildozer
 
-      - name: Install Android SDK & Build Tools
+      - name: Install Android SDK and Build Tools
         run: |
           mkdir -p $ANDROID_HOME/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk.zip
@@ -43,10 +43,9 @@ jobs:
             "platforms;android-33" \
             "build-tools;33.0.2"
 
-          # Проверка aidl
           if [ -f "$ANDROID_HOME/build-tools/33.0.2/aidl" ]; then
             echo "✅ AIDL найден"
-            sudo ln -s $ANDROID_HOME/build-tools/33.0.2/aidl /usr/local/bin/aidl
+            sudo ln -sf $ANDROID_HOME/build-tools/33.0.2/aidl /usr/local/bin/aidl
           else
             echo "❌ AIDL НЕ найден"
             exit 1
@@ -54,7 +53,10 @@ jobs:
 
       - name: Build APK
         run: |
-          which aidl || echo "⚠️ AIDL не найден в PATH"
+          echo "Проверка git:"
+          git --version || (echo "❌ Git не найден" && exit 1)
+          echo "Проверка aidl:"
+          which aidl || (echo "❌ aidl не найден" && exit 1)
           buildozer android debug
 
       - name: Upload APK

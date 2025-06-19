@@ -24,16 +24,18 @@ jobs:
           sudo apt install -y git zip unzip tar wget openjdk-8-jdk python3-pip libffi-dev libssl-dev libsqlite3-dev
           pip install --upgrade pip
           pip install cython buildozer
+          
+          # Проверка git
+          echo "Git version:"
+          git --version || echo "Git НЕ НАЙДЕН"
 
       - name: Install Android SDK + Build Tools
         run: |
-          # Установка Android SDK
           mkdir -p $HOME/android-sdk/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk-tools.zip
           unzip sdk-tools.zip -d $HOME/android-sdk/cmdline-tools
           mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
 
-          # Установка Android компонентов
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/33.0.2:$PATH
 
@@ -46,8 +48,10 @@ jobs:
       - name: Build APK with Buildozer
         env:
           ANDROID_HOME: $HOME/android-sdk
-          PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/33.0.2:$PATH
+          PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/33.0.2:/usr/bin:$PATH
         run: |
+          echo "Проверка git:"
+          git --version
           buildozer android debug
 
       - name: Upload APK
